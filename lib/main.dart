@@ -184,10 +184,15 @@ CalibrationResult calibrate(List<Tuple2<Offset, Offset>> touches) {
   /// Now we can use gaussian elimination to solve for abc and def.
 
   final solverABC = GaussianElimination(
-    equations: [
-      for (final touch in touches.take(3)) [touch.item1.dx, touch.item1.dy, 1],
-    ],
-    constants: [
+    matrix: RealMatrix.fromData(
+      rows: 3,
+      columns: 3,
+      data: [
+        for (final touch in touches.take(3))
+          [touch.item1.dx, touch.item1.dy, 1],
+      ],
+    ),
+    knownValues: [
       for (final touch in touches.take(3)) touch.item2.dx,
     ],
   );
@@ -195,10 +200,15 @@ CalibrationResult calibrate(List<Tuple2<Offset, Offset>> touches) {
   final abc = solverABC.solve();
 
   final solverDEF = GaussianElimination(
-    equations: [
-      for (final touch in touches.take(3)) [touch.item1.dx, touch.item1.dy, 1],
-    ],
-    constants: [
+    matrix: RealMatrix.fromData(
+      rows: 3,
+      columns: 3,
+      data: [
+        for (final touch in touches.take(3))
+          [touch.item1.dx, touch.item1.dy, 1],
+      ],
+    ),
+    knownValues: [
       for (final touch in touches.take(3)) touch.item2.dy,
     ],
   );
@@ -262,6 +272,9 @@ class _CalibratorState extends State<Calibrator> {
     print('[$d $e $f]');
     print('[     0      0      1]');
 
+    // We can ignore this because we always check if the widget has been disposed
+    // before continuing. So the context should always be valid
+    // ignore: use_build_context_synchronously
     final size = MediaQuery.of(context).size;
 
     final fromNDC = Matrix4.diagonal3Values(size.width, size.height, 1);

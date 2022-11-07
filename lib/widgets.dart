@@ -181,7 +181,7 @@ class _SelectTsScreenState extends State<SelectTsScreen> {
             hint: const Text('Select touchscreen...'),
             items: [
               for (final ts in widget.touchscreens)
-                DropdownMenuItem(child: Text(ts.name), value: ts)
+                DropdownMenuItem(value: ts, child: Text(ts.name))
             ],
             onChanged: (item) {
               setState(() {
@@ -235,6 +235,15 @@ class ShowApplyUdevRuleScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     late final Widget instructions;
     if (alreadyCalibrated) {
+      late String combinedCalibrationsMsg;
+      if (combinedCalibrations) {
+        combinedCalibrationsMsg =
+            'The new calibration has been combined with the old one, so you can safely replace it with the new calibration.';
+      } else {
+        combinedCalibrationsMsg =
+            'You chose to not combine the new calibration with the old one, which means you can\'t use it as a replacement for the old calibration in most cases.';
+      }
+
       instructions = Column(
         children: [
           Card(
@@ -250,10 +259,7 @@ class ShowApplyUdevRuleScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    'There\'s already a calibration matrix configured for this display. ' +
-                        (combinedCalibrations
-                            ? 'The new calibration has been combined with the old one, so you can safely replace it with the new calibration.'
-                            : 'You chose to not combine the new calibration with the old one, which means you can\'t use it as a replacement for the old calibration in most cases.'),
+                    'There\'s already a calibration matrix configured for this display. $combinedCalibrationsMsg',
                     style: const TextStyle(fontSize: 15),
                   ),
                 ],
@@ -381,6 +387,8 @@ class _TouchFeedbackOverlayState extends State<TouchFeedbackOverlay> {
   }
 }
 
+mixin MyWidgetsBinding on WidgetsBinding {}
+
 /// A specific variant of [WidgetsFlutterBinding] that can apply a transform
 /// to all the global positions of all pointer events.
 /// When using RenderObjects, you can only transform the [PointerEvent.localPosition]
@@ -396,9 +404,22 @@ class MyWidgetsFlutterBinding extends BindingBase
         RendererBinding,
         WidgetsBinding {
   static WidgetsBinding ensureInitialized() {
-    if (WidgetsBinding.instance == null) MyWidgetsFlutterBinding();
-    return WidgetsBinding.instance!;
+    if (_instance == null) {
+      return MyWidgetsFlutterBinding();
+    }
+    return instance;
   }
+
+  /// The current [MyWidgetsFlutterBinding], if one has been created.
+  ///
+  /// Provides access to the features exposed by this binding. The binding must
+  /// be initialized before using this getter; this is typically done by calling
+  /// [testWidgets] or [MyWidgetsFlutterBinding.ensureInitialized].
+  static MyWidgetsFlutterBinding get instance {
+    return BindingBase.checkInstance(_instance);
+  }
+
+  static MyWidgetsFlutterBinding? _instance;
 
   Matrix4? pointerEventGlobalTransform;
 
